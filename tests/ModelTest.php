@@ -402,12 +402,12 @@ class ModelTest extends TestCase
 
         // test custom date format for json output
         $json = $user->toArray();
-        $this->assertEquals($user->birthday->format('l jS \of F Y h:i:s A'), $json['birthday']);
-        $this->assertEquals($user->created_at->format('l jS \of F Y h:i:s A'), $json['created_at']);
+        $this->assertEquals($user->birthday->format('Y-m-d\TH:i:s\.\0\0\0\0\0\0\Z'), $json['birthday']);
+        $this->assertEquals($user->created_at->format('Y-m-d\TH:i:s\.\0\0\0\0\0\0\Z'), $json['created_at']);
 
         // test created_at
         $item = Item::create(['name' => 'sword']);
-        $this->assertInstanceOf(UTCDateTime::class, $item->getOriginal('created_at'));
+        $this->assertInstanceOf(Carbon::class, $item->getOriginal('created_at'));
         $this->assertEquals($item->getOriginal('created_at')
             ->toDateTime()
             ->getTimestamp(), $item->created_at->getTimestamp());
@@ -417,7 +417,7 @@ class ModelTest extends TestCase
         /** @var Item $item */
         $item = Item::create(['name' => 'sword']);
         $json = $item->toArray();
-        $this->assertEquals($item->created_at->format('Y-m-d H:i:s'), $json['created_at']);
+        $this->assertEquals($item->created_at->format('Y-m-d\TH:i:s\.\0\0\0\0\0\0\Z'), $json['created_at']);
 
         /** @var User $user */
         $user = User::create(['name' => 'Jane Doe', 'birthday' => time()]);
@@ -446,7 +446,7 @@ class ModelTest extends TestCase
 
         Carbon::setTestNow($fakeDate);
         $item = Item::create(['name' => 'sword']);
-        
+
         $this->assertLessThan(1, $fakeDate->diffInSeconds($item->created_at));
     }
 

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use Jenssegers\Mongodb\Queue\Failed\MongoFailedJobProvider;
+use Illuminate\Support\Arr;
 
 class QueueTest extends TestCase
 {
@@ -23,14 +24,17 @@ class QueueTest extends TestCase
         $job = Queue::pop('test');
         $this->assertInstanceOf(Jenssegers\Mongodb\Queue\MongoJob::class, $job);
         $this->assertEquals(1, $job->isReserved());
+        $raw_body = json_decode($job->getRawBody(), true);
+        Arr::forget($raw_body, 'uuid');
         $this->assertEquals(json_encode([
             'displayName' => 'test',
             'job' => 'test',
             'maxTries' => null,
-            'delay' => null,
+            'maxExceptions' => null,
+            'backoff' => null,
             'timeout' => null,
             'data' => ['action' => 'QueueJobLifeCycle'],
-        ]), $job->getRawBody());
+        ]), json_encode($raw_body));
 
         // Remove reserved job
         $job->delete();
