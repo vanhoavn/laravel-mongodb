@@ -411,8 +411,8 @@ class ModelTest extends TestCase
 
         // test custom date format for json output
         $json = $user->toArray();
-        $this->assertEquals($user->birthday->format('Y-m-d\TH:i:s\.\0\0\0\0\0\0\Z'), $json['birthday']);
-        $this->assertEquals($user->created_at->format('Y-m-d\TH:i:s\.\0\0\0\0\0\0\Z'), $json['created_at']);
+        $this->assertEquals($user->birthday->format('l jS \of F Y h:i:s A'), $json['birthday']);
+        $this->assertEquals($user->created_at->format('l jS \of F Y h:i:s A'), $json['created_at']);
 
         // test created_at
         $item = Item::create(['name' => 'sword']);

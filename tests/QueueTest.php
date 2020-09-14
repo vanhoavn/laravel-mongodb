@@ -32,8 +32,6 @@ class QueueTest extends TestCase
         $job = Queue::pop('test');
         $this->assertInstanceOf(Jenssegers\Mongodb\Queue\MongoJob::class, $job);
         $this->assertEquals(1, $job->isReserved());
-        $raw_body = json_decode($job->getRawBody(), true);
-        Arr::forget($raw_body, 'uuid');
         $this->assertEquals(json_encode([
             'uuid' => $uuid,
             'displayName' => 'test',
@@ -43,7 +41,7 @@ class QueueTest extends TestCase
             'backoff' => null,
             'timeout' => null,
             'data' => ['action' => 'QueueJobLifeCycle'],
-        ]), json_encode($raw_body));
+        ]), $job->getRawBody());
 
         // Remove reserved job
         $job->delete();
