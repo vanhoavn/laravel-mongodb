@@ -2,7 +2,6 @@
 
 namespace Jenssegers\Mongodb\Eloquent;
 
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 use Jenssegers\Mongodb\Helpers\EloquentBuilder;
@@ -11,6 +10,7 @@ use Jenssegers\Mongodb\Relations\BelongsToMany;
 use Jenssegers\Mongodb\Relations\HasMany;
 use Jenssegers\Mongodb\Relations\HasOne;
 use Jenssegers\Mongodb\Relations\MorphTo;
+use Jenssegers\Mongodb\Relations\MorphMany;
 
 trait HybridRelations
 {
@@ -39,21 +39,11 @@ trait HybridRelations
 
     /**
      * Define a polymorphic one-to-one relationship.
-<<<<<<< HEAD
-     *
-     * @param  string $related
-     * @param  string $name
-     * @param  string $type
-     * @param  string $id
-     * @param  string $localKey
-     *
-=======
      * @param string $related
      * @param string $name
      * @param string $type
      * @param string $id
      * @param string $localKey
->>>>>>> 2d76d22a5ea4dccc6f5a352b0003c1483f72e0f0
      * @return \Illuminate\Database\Eloquent\Relations\MorphOne
      */
     public function morphOne($related, $name, $type = null, $id = null, $localKey = null)
@@ -74,17 +64,9 @@ trait HybridRelations
 
     /**
      * Define a one-to-many relationship.
-<<<<<<< HEAD
-     *
-     * @param  string $related
-     * @param  string $foreignKey
-     * @param  string $localKey
-     *
-=======
      * @param string $related
      * @param string $foreignKey
      * @param string $localKey
->>>>>>> 2d76d22a5ea4dccc6f5a352b0003c1483f72e0f0
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function hasMany($related, $foreignKey = null, $localKey = null)
@@ -105,21 +87,11 @@ trait HybridRelations
 
     /**
      * Define a polymorphic one-to-many relationship.
-<<<<<<< HEAD
-     *
-     * @param  string $related
-     * @param  string $name
-     * @param  string $type
-     * @param  string $id
-     * @param  string $localKey
-     *
-=======
      * @param string $related
      * @param string $name
      * @param string $type
      * @param string $id
      * @param string $localKey
->>>>>>> 2d76d22a5ea4dccc6f5a352b0003c1483f72e0f0
      * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
     public function morphMany($related, $name, $type = null, $id = null, $localKey = null)
@@ -145,19 +117,10 @@ trait HybridRelations
 
     /**
      * Define an inverse one-to-one or many relationship.
-<<<<<<< HEAD
-     *
-     * @param  string $related
-     * @param  string $foreignKey
-     * @param  string $otherKey
-     * @param  string $relation
-     *
-=======
      * @param string $related
      * @param string $foreignKey
      * @param string $otherKey
      * @param string $relation
->>>>>>> 2d76d22a5ea4dccc6f5a352b0003c1483f72e0f0
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function belongsTo($related, $foreignKey = null, $otherKey = null, $relation = null)
@@ -221,7 +184,7 @@ trait HybridRelations
         // there are multiple types in the morph and we can't use single queries.
         if (($class = $this->$type) === null) {
             return new MorphTo(
-                $this->newQuery(), $this, $id, null, $type, $name
+                $this->newQuery(), $this, $id, $ownerKey, $type, $name
             );
         }
 
@@ -232,24 +195,15 @@ trait HybridRelations
 
         $instance = new $class;
 
+        $ownerKey = $ownerKey ?? $instance->getKeyName();
+
         return new MorphTo(
-            $instance->newQuery(), $this, $id, $instance->getKeyName(), $type, $name
+            $instance->newQuery(), $this, $id, $ownerKey, $type, $name
         );
     }
 
     /**
      * Define a many-to-many relationship.
-<<<<<<< HEAD
-     *
-     * @param  string $related
-     * @param  string $collection
-     * @param  string $foreignKey
-     * @param  string $otherKey
-     * @param  string $parentKey
-     * @param  string $relatedKey
-     * @param  string $relation
-     *
-=======
      * @param string $related
      * @param string $collection
      * @param string $foreignKey
@@ -257,7 +211,6 @@ trait HybridRelations
      * @param string $parentKey
      * @param string $relatedKey
      * @param string $relation
->>>>>>> 2d76d22a5ea4dccc6f5a352b0003c1483f72e0f0
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function belongsToMany(

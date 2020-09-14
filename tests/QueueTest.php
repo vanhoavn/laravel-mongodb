@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Jenssegers\Mongodb\Queue\Failed\MongoFailedJobProvider;
 use Illuminate\Support\Arr;
 
@@ -17,6 +19,12 @@ class QueueTest extends TestCase
 
     public function testQueueJobLifeCycle(): void
     {
+        $uuid = Str::uuid();
+
+        Str::createUuidsUsing(function () use ($uuid) {
+            return $uuid;
+        });
+
         $id = Queue::push('test', ['action' => 'QueueJobLifeCycle'], 'test');
         $this->assertNotNull($id);
 
@@ -27,6 +35,7 @@ class QueueTest extends TestCase
         $raw_body = json_decode($job->getRawBody(), true);
         Arr::forget($raw_body, 'uuid');
         $this->assertEquals(json_encode([
+            'uuid' => $uuid,
             'displayName' => 'test',
             'job' => 'test',
             'maxTries' => null,
@@ -39,6 +48,8 @@ class QueueTest extends TestCase
         // Remove reserved job
         $job->delete();
         $this->assertEquals(0, Queue::getDatabase()->table(Config::get('queue.connections.database.table'))->count());
+
+        Str::createUuidsNormally();
     }
 
     public function testQueueJobExpired(): void
@@ -47,7 +58,7 @@ class QueueTest extends TestCase
         $this->assertNotNull($id);
 
         // Expire the test job
-        $expiry = \Carbon\Carbon::now()->subSeconds(Config::get('queue.connections.database.expire'))->getTimestamp();
+        $expiry = Carbon::now()->subSeconds(Config::get('queue.connections.database.expire'))->getTimestamp();
         Queue::getDatabase()
             ->table(Config::get('queue.connections.database.table'))
             ->where('_id', $id)

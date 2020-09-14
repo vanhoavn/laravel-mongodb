@@ -34,6 +34,10 @@ class SchemaTest extends TestCase
         Schema::create('newcollection_two', null, ['capped' => true, 'size' => 1024]);
         $this->assertTrue(Schema::hasCollection('newcollection_two'));
         $this->assertTrue(Schema::hasTable('newcollection_two'));
+
+        $collection = Schema::getCollection('newcollection_two');
+        $this->assertTrue($collection['options']['capped']);
+        $this->assertEquals(1024, $collection['options']['size']);
     }
 
     public function testDrop(): void
@@ -130,6 +134,20 @@ class SchemaTest extends TestCase
         });
 
         $index = $this->getIndex('newcollection', 'field_a_1_field_b_1');
+        $this->assertFalse($index);
+
+        Schema::collection('newcollection', function ($collection) {
+            $collection->index(['field_a' => -1, 'field_b' => 1]);
+        });
+
+        $index = $this->getIndex('newcollection', 'field_a_-1_field_b_1');
+        $this->assertNotNull($index);
+
+        Schema::collection('newcollection', function ($collection) {
+            $collection->dropIndex(['field_a' => -1, 'field_b' => 1]);
+        });
+
+        $index = $this->getIndex('newcollection', 'field_a_-1_field_b_1');
         $this->assertFalse($index);
 
         Schema::collection('newcollection', function ($collection) {

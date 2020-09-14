@@ -2,13 +2,13 @@
 
 namespace Jenssegers\Mongodb\Eloquent;
 
-use Carbon\Carbon;
 use DateTime;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 use Jenssegers\Mongodb\Query\Builder as QueryBuilder;
 use MongoDB\BSON\Binary;
@@ -89,7 +89,7 @@ abstract class Model extends BaseModel
             $value = parent::asDateTime($value);
         }
 
-        return new UTCDateTime($value->getTimestamp() * 1000);
+        return new UTCDateTime($value->format('Uv'));
     }
 
     /**
@@ -99,7 +99,13 @@ abstract class Model extends BaseModel
     {
         // Convert UTCDateTime instances.
         if ($value instanceof UTCDateTime) {
-            return Carbon::createFromTimestamp($value->toDateTime()->getTimestamp());
+            $date = $value->toDateTime();
+
+            $seconds = $date->format('U');
+            $milliseconds = abs($date->format('v'));
+            $timestampMs = sprintf('%d%03d', $seconds, $milliseconds);
+
+            return Date::createFromTimestampMs($timestampMs);
         }
 
         return parent::asDateTime($value);
@@ -118,7 +124,7 @@ abstract class Model extends BaseModel
      */
     public function freshTimestamp()
     {
-        return new UTCDateTime(Carbon::now());
+        return new UTCDateTime(Date::now()->format('Uv'));
     }
 
     /**
@@ -234,34 +240,31 @@ abstract class Model extends BaseModel
             return false;
         }
 
-        $current = $this->transformModelValue(
-            $key, Arr::get($this->attributes, $key)
-        );
-        $original = $this->getOriginal($key);
+        $attribute = Arr::get($this->attributes, $key);
+        $original = Arr::get($this->original, $key);
 
-
-        if ($current === $original) {
+        if ($attribute === $original) {
             return true;
         }
 
-        if (null === $current) {
+        if (null === $attribute) {
             return false;
         }
 
         if ($this->isDateAttribute($key)) {
-            $current = $current instanceof UTCDateTime ? $this->asDateTime($current) : $current;
+            $attribute = $attribute instanceof UTCDateTime ? $this->asDateTime($attribute) : $attribute;
             $original = $original instanceof UTCDateTime ? $this->asDateTime($original) : $original;
 
-            return $current == $original;
+            return $attribute == $original;
         }
 
-        if ($this->hasCast($key)) {
-            return $this->castAttribute($key, $current) ===
+        if ($this->hasCast($key, static::$primitiveCastTypes)) {
+            return $this->castAttribute($key, $attribute) ===
                 $this->castAttribute($key, $original);
         }
 
-        return is_numeric($current) && is_numeric($original)
-            && strcmp((string) $current, (string) $original) === 0;
+        return is_numeric($attribute) && is_numeric($original)
+            && strcmp((string) $attribute, (string) $original) === 0;
     }
 
     /**
@@ -469,6 +472,17 @@ abstract class Model extends BaseModel
         }
 
         return $relations;
+    }
+
+    /**
+     * Checks if column exists on a table.  As this is a document model, just return true.  This also
+     * prevents calls to non-existent function Grammar::compileColumnListing()
+     * @param string $key
+     * @return bool
+     */
+    protected function isGuardableColumn($key)
+    {
+        return true;
     }
 
     /**
